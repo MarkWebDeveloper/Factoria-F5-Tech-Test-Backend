@@ -1,6 +1,6 @@
 package dev.mark.factoria_tech_test.users.profiles;
 
-import java.util.Set;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -43,8 +43,8 @@ public class Profile {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private User user;
 
-    // @Column
-    // @ManyToMany(fetch = FetchType.EAGER)
-    // @JoinTable(name = "images_profiles", joinColumns = @JoinColumn(name = "profile_id"), inverseJoinColumns = @JoinColumn(name = "image_id"))
-    // Set<Image> images;
+    @Column
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "images_profiles", joinColumns = @JoinColumn(name = "profile_id"), inverseJoinColumns = @JoinColumn(name = "image_id"))
+    List<Image> images;
 }

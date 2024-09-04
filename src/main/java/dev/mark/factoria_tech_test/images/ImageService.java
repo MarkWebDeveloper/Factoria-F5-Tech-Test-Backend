@@ -8,27 +8,36 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
+import java.util.List;
 
 import javax.management.RuntimeErrorException;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.lang.NonNull;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import dev.mark.factoria_tech_test.config.StorageProperties;
+import dev.mark.factoria_tech_test.users.profiles.Profile;
+import dev.mark.factoria_tech_test.users.profiles.ProfileRepository;
+import dev.mark.factoria_tech_test.users.security.SecurityUser;
 import dev.mark.factoria_tech_test.utilities.Time;
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class ImageService implements IStorageService {
 
-    ImageRepository imageRepository;
-    Time time;
+    private ImageRepository imageRepository;
+    private Time time;
     private final Path rootLocation;
+    private ProfileRepository profileRepository;
 
-    public ImageService(ImageRepository imageRepository, Time time, StorageProperties properties){
+    public ImageService(ImageRepository imageRepository, Time time, StorageProperties properties, ProfileRepository profileRepository){
         if (properties.getLocation().trim().length() == 0) {
             throw new StorageException("File upload location can not be Empty.");
         }
@@ -36,6 +45,7 @@ public class ImageService implements IStorageService {
         this.rootLocation = Paths.get(properties.getLocation());
         this.imageRepository = imageRepository;
         this.time = time;
+        this.profileRepository = profileRepository;
     }
 
     @Override
@@ -55,6 +65,18 @@ public class ImageService implements IStorageService {
     @Override
     public void saveImage(MultipartFile file, @NonNull String imageTitle){
 
+        SecurityContext contextHolder = SecurityContextHolder.getContext();
+        Authentication auth = contextHolder.getAuthentication();
+
+        Long principalId = 0L;
+
+        if (auth.getPrincipal() instanceof SecurityUser securityUser) {
+            principalId = securityUser.getId();
+        }
+
+        Profile profile = profileRepository.findById(principalId).orElseThrow(() -> new EntityNotFoundException("Profile not found"));
+        List<Image> profileImages = profile.getImages();
+
         if (file != null) {
             String uniqueName = createUniqueName(file);
             Path path = createPath(uniqueName);
@@ -67,6 +89,7 @@ public class ImageService implements IStorageService {
                 }
                 Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
                 imageRepository.save(newImage);
+                profileImages.add(newImage);
             } catch (IOException e) {
                 throw new RuntimeErrorException(null, "File" + uniqueName + "has not been saved");
             }

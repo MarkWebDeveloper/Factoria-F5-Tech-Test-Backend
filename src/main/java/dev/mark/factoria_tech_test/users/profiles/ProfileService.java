@@ -19,5 +19,4 @@ public class ProfileService implements IGenericGetService<Profile> {
 
         return profile;
     }
-    
 }

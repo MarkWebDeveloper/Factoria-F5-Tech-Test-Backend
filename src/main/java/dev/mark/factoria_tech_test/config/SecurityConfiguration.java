@@ -19,6 +19,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import dev.mark.factoria_tech_test.users.security.JpaUserDetailsService;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
@@ -28,6 +30,13 @@ public class SecurityConfiguration {
 
 	@Autowired
     private AuthenticationEntryPoint CustomAuthenticationEntryPoint;
+
+	JpaUserDetailsService jpaUserDetailsService;
+
+	public SecurityConfiguration(JpaUserDetailsService jpaUserDetailsService) {
+		this.jpaUserDetailsService = jpaUserDetailsService;
+	}
+
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -39,12 +48,13 @@ public class SecurityConfiguration {
 				.logout(out -> out
 						.logoutUrl(endpoint + "/logout")
 						.deleteCookies("JSESSIONID"))
-				// .authorizeHttpRequests(auth -> auth
-                //         .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
-				// 		.requestMatchers(HttpMethod.GET, "/").permitAll()
-				// 		.requestMatchers(HttpMethod.POST, "/").permitAll()
-				// 		.anyRequest().authenticated())
-				// .httpBasic(basic -> basic.authenticationEntryPoint(CustomAuthenticationEntryPoint))
+				.authorizeHttpRequests(auth -> auth
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
+						.requestMatchers(HttpMethod.GET, "/").permitAll()
+						.requestMatchers(HttpMethod.POST, "/").permitAll()
+						.anyRequest().authenticated())
+				.userDetailsService(jpaUserDetailsService)
+				.httpBasic(basic -> basic.authenticationEntryPoint(CustomAuthenticationEntryPoint))
 				.sessionManagement(session -> session
 						.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
 
