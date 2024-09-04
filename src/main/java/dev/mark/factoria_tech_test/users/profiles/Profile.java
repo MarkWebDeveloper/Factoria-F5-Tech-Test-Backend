@@ -43,8 +43,6 @@ public class Profile {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private User user;
 
-    private String name;
-
     // @Column
     // @ManyToMany(fetch = FetchType.EAGER)
     // @JoinTable(name = "images_profiles", joinColumns = @JoinColumn(name = "profile_id"), inverseJoinColumns = @JoinColumn(name = "image_id"))
