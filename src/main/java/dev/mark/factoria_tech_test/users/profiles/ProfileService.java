@@ -19,11 +19,5 @@ public class ProfileService implements IGenericGetService<Profile> {
 
         return profile;
     }
-
-    @PreAuthorize("hasRole('USER')")
-    public Profile getByEmail(@NonNull String email)throws Exception{
-        Profile profile = repository.findByEmail(email).orElseThrow(() -> new ProfileNotFoundException("Profile not found"));
-        return profile;
-    }
     
 }

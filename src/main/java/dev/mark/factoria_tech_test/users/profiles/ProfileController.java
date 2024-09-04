@@ -24,12 +24,5 @@ public class ProfileController {
         Profile profile = service.getById(id);
         return ResponseEntity.status(HttpStatusCode.valueOf(200)).body(profile);
     }
-
-    @PostAuthorize("returnObject.body.email == authentication.principal.username")
-    @GetMapping(path = "/user/profiles/getByEmail/{email}")
-    public ResponseEntity<Profile> getByEmail(@NonNull @PathVariable("email") String email)throws Exception{
-        Profile profile = service.getByEmail(email);
-        return ResponseEntity.status(HttpStatusCode.valueOf(200)).body(profile);
-    }
     
 }
