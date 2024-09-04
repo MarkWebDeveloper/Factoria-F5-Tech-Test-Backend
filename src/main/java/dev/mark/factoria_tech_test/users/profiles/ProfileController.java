@@ -18,8 +18,8 @@ public class ProfileController {
     
     ProfileService service;
 
-    @PostAuthorize("returnObject.body.id == authentication.principal.id")
-    @GetMapping(path = "/user/profiles/getById/{id}")
+    @PostAuthorize("returnObject.body.id == authentication.principal.getId()")
+    @GetMapping(path = "/any/profiles/getById/{id}")
     public ResponseEntity<Profile> getById(@NonNull @PathVariable("id") Long id) throws Exception{
         Profile profile = service.getById(id);
         return ResponseEntity.status(HttpStatusCode.valueOf(200)).body(profile);

@@ -58,7 +58,7 @@ public class ImageService implements IStorageService {
     }
 
     @Override
-    public Path createPath(String filename) {
+    public Path resolvePath(String filename) {
         return rootLocation.resolve(filename);
     }
 
@@ -67,11 +67,11 @@ public class ImageService implements IStorageService {
 
         SecurityContext contextHolder = SecurityContextHolder.getContext();
         Authentication auth = contextHolder.getAuthentication();
-
         Long principalId = 0L;
 
         if (auth.getPrincipal() instanceof SecurityUser securityUser) {
             principalId = securityUser.getId();
+            System.out.println("The user id is:" + principalId);
         }
 
         Profile profile = profileRepository.findById(principalId).orElseThrow(() -> new EntityNotFoundException("Profile not found"));
@@ -79,7 +79,7 @@ public class ImageService implements IStorageService {
 
         if (file != null) {
             String uniqueName = createUniqueName(file);
-            Path path = createPath(uniqueName);
+            Path path = resolvePath(uniqueName);
 
             Image newImage = Image.builder().imageTitle(imageTitle).imageName(uniqueName).build();
 
@@ -90,6 +90,8 @@ public class ImageService implements IStorageService {
                 Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
                 imageRepository.save(newImage);
                 profileImages.add(newImage);
+                profile.setImages(profileImages);
+                profileRepository.save(profile);
             } catch (IOException e) {
                 throw new RuntimeErrorException(null, "File" + uniqueName + "has not been saved");
             }
@@ -101,7 +103,7 @@ public class ImageService implements IStorageService {
     @Override
     public Resource loadAsResource(String filename){
         try {
-            Path file = createPath(filename);
+            Path file = resolvePath(filename);
             Resource resource = new UrlResource(file.toUri());
             if (resource.exists() || resource.isReadable()) {
                 return resource;

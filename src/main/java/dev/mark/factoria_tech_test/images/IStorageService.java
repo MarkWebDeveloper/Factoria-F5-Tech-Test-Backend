@@ -12,7 +12,7 @@ public interface IStorageService {
 
     void init();
 
-    Path createPath(String filename);
+    Path resolvePath(String filename);
 
     void saveImage(MultipartFile file, @NonNull String imageTitle);
 

@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -23,6 +23,7 @@ import dev.mark.factoria_tech_test.users.security.JpaUserDetailsService;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfiguration {
 
 	@Value("${api-endpoint}")
@@ -37,7 +38,6 @@ public class SecurityConfiguration {
 		this.jpaUserDetailsService = jpaUserDetailsService;
 	}
 
-
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
@@ -46,17 +46,21 @@ public class SecurityConfiguration {
 				.csrf(csrf -> csrf.disable())
 				.formLogin(form -> form.disable())
 				.logout(out -> out
-						.logoutUrl(endpoint + "/logout")
+						.logoutUrl(endpoint + "/all/logout")
 						.deleteCookies("JSESSIONID"))
 				.authorizeHttpRequests(auth -> auth
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
-						.requestMatchers(HttpMethod.GET, "/").permitAll()
-						.requestMatchers(HttpMethod.POST, "/").permitAll()
+						.requestMatchers("/error").permitAll()
+						.requestMatchers(endpoint + "/all/**").permitAll()
+						.requestMatchers(endpoint + "/any/**").hasAnyRole("ADMIN", "USER")
+						.requestMatchers(endpoint + "/admin/**").hasRole("ADMIN")
+						.requestMatchers(endpoint + "/user/**").hasRole("USER") 
+						.requestMatchers(endpoint + "/imgs/**").permitAll()
 						.anyRequest().authenticated())
 				.userDetailsService(jpaUserDetailsService)
 				.httpBasic(basic -> basic.authenticationEntryPoint(CustomAuthenticationEntryPoint))
 				.sessionManagement(session -> session
-						.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
+						.sessionCreationPolicy(SessionCreationPolicy.ALWAYS));
 
 		http.headers(header -> header.frameOptions(frame -> frame.sameOrigin()));
 
@@ -75,6 +79,7 @@ public class SecurityConfiguration {
 		return source;
 	}
 
+	
 	@Bean
 	public BCryptPasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
