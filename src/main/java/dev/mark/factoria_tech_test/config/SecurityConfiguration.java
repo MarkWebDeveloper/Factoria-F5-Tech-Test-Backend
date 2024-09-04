@@ -57,7 +57,7 @@ public class SecurityConfiguration {
 	CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
 		configuration.setAllowCredentials(true);
-		configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "https://printgo.factoriaf5asturias.org/"));
+		configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
 		configuration.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization"));
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
