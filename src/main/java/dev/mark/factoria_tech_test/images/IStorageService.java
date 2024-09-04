@@ -10,13 +10,13 @@ import org.springframework.web.multipart.MultipartFile;
 @Component
 public interface IStorageService {
 
-    void init() throws StorageException;
+    void init();
 
     Path createPath(String filename);
 
-    void saveImage(MultipartFile file, @NonNull String imageTitle) throws StorageException;
+    void saveImage(MultipartFile file, @NonNull String imageTitle);
 
-	Resource loadAsResource(String filename) throws StorageException;
+	Resource loadAsResource(String filename);
 
     public boolean delete(String filename);
 

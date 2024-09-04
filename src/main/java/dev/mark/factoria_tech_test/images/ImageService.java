@@ -1,6 +1,5 @@
 package dev.mark.factoria_tech_test.images;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -29,7 +28,7 @@ public class ImageService implements IStorageService {
     Time time;
     private final Path rootLocation;
 
-    public ImageService(ImageRepository imageRepository, Time time, StorageProperties properties) throws StorageException {
+    public ImageService(ImageRepository imageRepository, Time time, StorageProperties properties){
         if (properties.getLocation().trim().length() == 0) {
             throw new StorageException("File upload location can not be Empty.");
         }
@@ -40,7 +39,7 @@ public class ImageService implements IStorageService {
     }
 
     @Override
-    public void init() throws StorageException {
+    public void init(){
         try {
             Files.createDirectories(rootLocation);
         } catch (IOException e) {
@@ -54,7 +53,7 @@ public class ImageService implements IStorageService {
     }
 
     @Override
-    public void saveImage(MultipartFile file, @NonNull String imageTitle) throws StorageException {
+    public void saveImage(MultipartFile file, @NonNull String imageTitle){
 
         if (file != null) {
             String uniqueName = createUniqueName(file);
@@ -77,18 +76,18 @@ public class ImageService implements IStorageService {
     }
 
     @Override
-    public Resource loadAsResource(String filename) throws StorageException {
+    public Resource loadAsResource(String filename){
         try {
             Path file = createPath(filename);
             Resource resource = new UrlResource(file.toUri());
             if (resource.exists() || resource.isReadable()) {
                 return resource;
             } else {
-                throw new StorageException("Could not read file: " + filename);
+                throw new StorageFileNotFoundException("Could not read file: " + filename);
 
             }
         } catch (MalformedURLException e) {
-            throw new StorageException("Could not read file: " + filename, e);
+            throw new StorageFileNotFoundException("Could not read file: " + filename, e);
         }
     }
 
@@ -96,7 +95,7 @@ public class ImageService implements IStorageService {
     public boolean delete(String filename) {
         try {
             Image image = imageRepository.findByImageName(filename)
-                    .orElseThrow(() -> new FileNotFoundException("Image not found in the database"));
+                    .orElseThrow(() -> new StorageFileNotFoundException("Image not found in the database"));
             imageRepository.delete(image);
             Path file = rootLocation.resolve(filename);
             return Files.deleteIfExists(file);
