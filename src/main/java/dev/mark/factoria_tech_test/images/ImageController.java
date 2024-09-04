@@ -24,7 +24,7 @@ public class ImageController {
     @Autowired
     IStorageService service;
 
-    @PostMapping(path = "/images/uploadImages")
+    @PostMapping(path = "/any/images/uploadImage")
     ResponseEntity<ResponseMessage> uploadImages(@RequestParam(name = "imageTitle", required = true) String imageTitle,
             @RequestParam(name = "file", required = true) MultipartFile file) {
 
@@ -40,7 +40,7 @@ public class ImageController {
         }
     }
 
-    @GetMapping("/images/getAsResource/{filename:.+}")
+    @GetMapping("/any/images/getAsResource/{filename:.+}")
     @ResponseBody
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
 
@@ -53,7 +53,7 @@ public class ImageController {
                 "attachment; filename=\"" + file.getFilename() + "\"").body(file);
     }
 
-    @DeleteMapping("/images/{filename:.+}")
+    @DeleteMapping("/any/images/{filename:.+}")
     public ResponseEntity<ResponseMessage> deleteFile(@PathVariable String filename) {
         String message = "";
 
