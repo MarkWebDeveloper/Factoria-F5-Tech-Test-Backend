@@ -4,12 +4,11 @@ import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
-import dev.mark.factoria_tech_test.generics.IGenericGetService;
 import lombok.AllArgsConstructor;
 
 @Service
 @AllArgsConstructor
-public class ProfileService implements IGenericGetService<Profile> {
+public class ProfileService {
 
     ProfileRepository repository;
 

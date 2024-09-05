@@ -2,11 +2,10 @@ package dev.mark.factoria_tech_test.users.roles;
 
 import org.springframework.stereotype.Service;
 
-import dev.mark.factoria_tech_test.generics.IGenericGetService;
 import io.micrometer.common.lang.NonNull;
 
 @Service
-public class RoleService implements IGenericGetService<Role>{
+public class RoleService{
     
     RoleRepository repository;
 

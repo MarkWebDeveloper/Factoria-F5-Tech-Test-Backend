@@ -25,11 +25,14 @@ import dev.mark.factoria_tech_test.messages.ResponseMessage;
 public class ImageController {
 
     @Autowired
-    IStorageService service;
+    IStorageService storageService;
+
+    @Autowired
+    ImageService imageService;
 
     @GetMapping(path = "/any/images/getCurrentUserImages")
     public ResponseEntity<List<Image>> getById() throws Exception{
-        List<Image> images = service.getCurrentUserImages();
+        List<Image> images = imageService.getCurrentUserImages();
         return ResponseEntity.status(HttpStatusCode.valueOf(200)).body(images);
     }
 
@@ -39,8 +42,11 @@ public class ImageController {
 
         String message = "";
 
+        String uniqueImageName = storageService.createUniqueName(file);
+
         try {
-            service.saveImage(file, imageTitle);
+            storageService.saveImage(file, uniqueImageName);
+            imageService.saveImage(file, imageTitle, uniqueImageName);
             message = "File is uploaded successfully.";
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseMessage(message));
         } catch (Exception e) {
@@ -53,7 +59,7 @@ public class ImageController {
     @ResponseBody
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
 
-        Resource file = service.loadAsResource(filename);
+        Resource file = storageService.loadAsResource(filename);
 
         if (file == null)
             return ResponseEntity.notFound().build();
@@ -67,10 +73,11 @@ public class ImageController {
         String message = "";
 
         try {
-            boolean existed = service.delete(filename);
+            imageService.delete(filename);
+            boolean existed = storageService.delete(filename);
 
             if (existed) {
-                message = "Delete the file successfully: " + filename;
+                message = "Deleted the file: " + filename + "succesfully";
                 return ResponseEntity.status(HttpStatus.OK).body(new ResponseMessage(message));
             }
 
