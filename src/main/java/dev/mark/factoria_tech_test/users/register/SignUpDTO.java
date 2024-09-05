@@ -1,37 +1,15 @@
 package dev.mark.factoria_tech_test.users.register;
 
-import lombok.Getter; 
-import lombok.Setter; 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor; 
   
 @Getter
-@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class SignUpDTO { 
       
     private String username; 
-    private String password; 
-      
-    public SignUpDTO() { 
-          
-    } 
-      
-    public SignUpDTO(String username, String password) { 
-        super(); 
-        this.username = username; 
-        this.password = password; 
-    } 
-    public String getUsername() { 
-        return username; 
-    } 
-    public void setUsername(String username) { 
-        this.username = username; 
-    } 
-    public String getPassword() { 
-        return password; 
-    } 
-    public void setPassword(String password) { 
-        this.password = password; 
-    } 
-      
-      
+    private String password;    
   
 } 
