@@ -42,5 +42,4 @@ public class Image {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @ManyToMany(mappedBy = "images")
     Set<Profile> profiles;
-
 }
