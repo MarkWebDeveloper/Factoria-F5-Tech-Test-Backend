@@ -3,6 +3,7 @@ package dev.mark.factoria_tech_test.images;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,6 +27,7 @@ import dev.mark.factoria_tech_test.config.StorageProperties;
 import dev.mark.factoria_tech_test.users.profiles.Profile;
 import dev.mark.factoria_tech_test.users.profiles.ProfileRepository;
 import dev.mark.factoria_tech_test.users.security.SecurityUser;
+import dev.mark.factoria_tech_test.utilities.FileOperations;
 import dev.mark.factoria_tech_test.utilities.Time;
 import jakarta.persistence.EntityNotFoundException;
 
@@ -36,8 +38,9 @@ public class ImageService implements IStorageService {
     private Time time;
     private final Path rootLocation;
     private ProfileRepository profileRepository;
+    private final FileOperations fileOperations;
 
-    public ImageService(ImageRepository imageRepository, Time time, StorageProperties properties, ProfileRepository profileRepository){
+    public ImageService(ImageRepository imageRepository, Time time, StorageProperties properties, ProfileRepository profileRepository, FileOperations fileOperations){
         if (properties.getLocation().trim().length() == 0) {
             throw new StorageException("File upload location can not be Empty.");
         }
@@ -46,6 +49,7 @@ public class ImageService implements IStorageService {
         this.imageRepository = imageRepository;
         this.time = time;
         this.profileRepository = profileRepository;
+        this.fileOperations = fileOperations;
     }
 
     @Override
@@ -65,6 +69,10 @@ public class ImageService implements IStorageService {
     @Override
     public void saveImage(MultipartFile file, @NonNull String imageTitle){
 
+        if (file == null || file.isEmpty()) {
+            throw new StorageException("Failed to store empty file.");
+        }
+
         SecurityContext contextHolder = SecurityContextHolder.getContext();
         Authentication auth = contextHolder.getAuthentication();
         Long principalId = 0L;
@@ -77,34 +85,31 @@ public class ImageService implements IStorageService {
         Profile profile = profileRepository.findById(principalId).orElseThrow(() -> new EntityNotFoundException("Profile not found"));
         List<Image> profileImages = profile.getImages();
 
-        if (file != null) {
-            String uniqueName = createUniqueName(file);
-            Path path = resolvePath(uniqueName);
 
-            Image newImage = Image.builder().imageTitle(imageTitle).imageName(uniqueName).build();
+        String uniqueName = createUniqueName(file);
+        Path path = resolvePath(uniqueName);
 
-            try (InputStream inputStream = file.getInputStream()) {
-                if (file.isEmpty()) {
-                    throw new StorageException("Failed to store empty file.");
-                }
-                Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
-                imageRepository.save(newImage);
-                profileImages.add(newImage);
-                profile.setImages(profileImages);
-                profileRepository.save(profile);
-            } catch (IOException e) {
-                throw new RuntimeErrorException(null, "File" + uniqueName + "has not been saved");
+        Image newImage = Image.builder().imageTitle(imageTitle).imageName(uniqueName).build();
+
+        try (InputStream inputStream = file.getInputStream()) {
+            if (file.isEmpty()) {
+                throw new StorageException("Failed to store empty file.");
             }
-
+            Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
+            imageRepository.save(newImage);
+            profileImages.add(newImage);
+            profile.setImages(profileImages);
+            profileRepository.save(profile);
+        } catch (IOException e) {
+            throw new RuntimeErrorException(null, "File" + uniqueName + "has not been saved");
         }
-
     }
 
     @Override
     public Resource loadAsResource(String filename){
         try {
             Path file = resolvePath(filename);
-            Resource resource = new UrlResource(file.toUri());
+            Resource resource = createUrlResource(file.toUri());
             if (resource.exists() || resource.isReadable()) {
                 return resource;
             } else {
@@ -123,7 +128,7 @@ public class ImageService implements IStorageService {
                     .orElseThrow(() -> new StorageFileNotFoundException("Image not found in the database"));
             imageRepository.delete(image);
             Path file = rootLocation.resolve(filename);
-            return Files.deleteIfExists(file);
+            return fileOperations.deleteIfExists(file);
         } catch (IOException e) {
             throw new RuntimeException("Error: " + e.getMessage());
         }
@@ -136,5 +141,9 @@ public class ImageService implements IStorageService {
         String combinedName = MessageFormat.format("{0}-{1}.{2}", baseName, time.checkCurrentTime(), fileExtension);
 
         return combinedName;
+    }
+
+    protected Resource createUrlResource(URI uri) throws MalformedURLException {
+        return new UrlResource(uri);
     }
 }
