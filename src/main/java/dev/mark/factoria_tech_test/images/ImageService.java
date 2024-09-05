@@ -16,6 +16,7 @@ import javax.management.RuntimeErrorException;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.lang.NonNull;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -64,6 +65,23 @@ public class ImageService implements IStorageService {
     @Override
     public Path resolvePath(String filename) {
         return rootLocation.resolve(filename);
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @Override
+    public List<Image> getCurrentUserImages() {
+
+        SecurityContext contextHolder = SecurityContextHolder.getContext();
+        Authentication auth = contextHolder.getAuthentication();
+        Long principalId = 0L;
+
+        if (auth.getPrincipal() instanceof SecurityUser securityUser) {
+            principalId = securityUser.getId();
+            System.out.println("The user id is:" + principalId);
+        }
+
+        List<Image> images = imageRepository.findImagesByProfileId(principalId).orElseThrow(() -> new StorageFileNotFoundException("Profile not found"));
+        return images;
     }
 
     @Override

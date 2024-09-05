@@ -1,6 +1,7 @@
 package dev.mark.factoria_tech_test.images;
 
 import java.nio.file.Path;
+import java.util.List;
 
 import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
@@ -11,6 +12,8 @@ import org.springframework.web.multipart.MultipartFile;
 public interface IStorageService {
 
     void init();
+
+    List<Image> getCurrentUserImages();
 
     Path resolvePath(String filename);
 

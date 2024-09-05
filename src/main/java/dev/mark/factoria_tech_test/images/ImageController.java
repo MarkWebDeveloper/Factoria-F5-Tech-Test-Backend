@@ -1,9 +1,12 @@
 package dev.mark.factoria_tech_test.images;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +26,12 @@ public class ImageController {
 
     @Autowired
     IStorageService service;
+
+    @GetMapping(path = "/any/images/getCurrentUserImages")
+    public ResponseEntity<List<Image>> getById() throws Exception{
+        List<Image> images = service.getCurrentUserImages();
+        return ResponseEntity.status(HttpStatusCode.valueOf(200)).body(images);
+    }
 
     @PostMapping(path = "/any/images/uploadImage")
     ResponseEntity<ResponseMessage> uploadImages(@RequestParam(name = "imageTitle", required = true) String imageTitle,
