@@ -5,6 +5,7 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import dev.mark.factoria_tech_test.users.profiles.Profile;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -40,6 +41,6 @@ public class Image {
 
     @Column
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @ManyToMany(mappedBy = "images")
+    @ManyToMany(mappedBy = "images", cascade = CascadeType.REMOVE)
     Set<Profile> profiles;
 }
