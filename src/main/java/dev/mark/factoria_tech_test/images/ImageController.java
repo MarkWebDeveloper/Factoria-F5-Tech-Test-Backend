@@ -37,22 +37,14 @@ public class ImageController {
     }
 
     @PostMapping(path = "/any/images/uploadImage")
-    ResponseEntity<ResponseMessage> uploadImages(@RequestParam(name = "imageTitle", required = true) String imageTitle,
+    ResponseEntity<Image> uploadImages(@RequestParam(name = "imageTitle", required = true) String imageTitle,
             @RequestParam(name = "file", required = true) MultipartFile file) {
 
-        String message = "";
-
         String uniqueImageName = storageService.createUniqueName(file);
-
-        try {
-            storageService.saveImage(file, uniqueImageName);
-            imageService.saveImage(file, imageTitle, uniqueImageName);
-            message = "File is uploaded successfully.";
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseMessage(message));
-        } catch (Exception e) {
-            message = e.getMessage();
-            return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(new ResponseMessage(message));
-        }
+       
+        storageService.saveImage(file, uniqueImageName);
+        Image savedImage = imageService.saveImage(file, imageTitle, uniqueImageName);
+        return ResponseEntity.status(HttpStatus.OK).body(savedImage);
     }
 
     @GetMapping("/any/images/getAsResource/{filename:.+}")

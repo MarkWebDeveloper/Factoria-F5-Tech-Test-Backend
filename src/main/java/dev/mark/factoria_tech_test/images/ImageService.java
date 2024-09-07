@@ -29,7 +29,7 @@ public class ImageService {
         return images;
     }
 
-    public void saveImage(MultipartFile file, @NonNull String imageTitle, @NonNull String imageName) {
+    public Image saveImage(MultipartFile file, @NonNull String imageTitle, @NonNull String imageName) {
 
         Long principalId = usersManager.getCurrentUserId();
 
@@ -38,11 +38,12 @@ public class ImageService {
 
         Image newImage = Image.builder().imageTitle(imageTitle).imageName(imageName).build();
 
-        imageRepository.save(newImage);
+        Image savedImage = imageRepository.save(newImage);
         profileImages.add(newImage);
         profile.setImages(profileImages);
         profileRepository.save(profile);
         
+        return savedImage;
     }
 
     @PreAuthorize("hasRole('USER')")
