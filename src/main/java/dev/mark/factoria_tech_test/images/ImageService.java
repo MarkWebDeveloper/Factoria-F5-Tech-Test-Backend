@@ -2,7 +2,6 @@ package dev.mark.factoria_tech_test.images;
 
 import java.util.List;
 import org.springframework.lang.NonNull;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,7 +19,6 @@ public class ImageService {
     private ProfileRepository profileRepository;
     private UsersManager usersManager;
 
-    @PreAuthorize("hasRole('USER')")
     public List<Image> getCurrentUserImages() {
 
         Long principalId = usersManager.getCurrentUserId();
@@ -46,10 +44,15 @@ public class ImageService {
         return savedImage;
     }
 
-    @PreAuthorize("hasRole('USER')")
     public void delete(String filename) {
+
+        Long principalId = usersManager.getCurrentUserId();
+        Profile profile = profileRepository.findById(principalId).orElseThrow(() -> new EntityNotFoundException("Profile not found"));
+
         Image image = imageRepository.findByImageName(filename)
-                .orElseThrow(() -> new StorageFileNotFoundException("Image not found in the database"));
+        .orElseThrow(() -> new StorageFileNotFoundException("Image not found in the database"));
+        
+        profile.getImages().remove(image);
         imageRepository.delete(image);
     }
 }

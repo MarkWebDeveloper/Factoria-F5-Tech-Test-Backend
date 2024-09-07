@@ -41,10 +41,12 @@ public class ImageController {
             @RequestParam(name = "file", required = true) MultipartFile file) {
 
         String uniqueImageName = storageService.createUniqueName(file);
-       
+
         storageService.saveImage(file, uniqueImageName);
         Image savedImage = imageService.saveImage(file, imageTitle, uniqueImageName);
+
         return ResponseEntity.status(HttpStatus.OK).body(savedImage);
+        
     }
 
     @GetMapping("/any/images/getAsResource/{filename:.+}")
