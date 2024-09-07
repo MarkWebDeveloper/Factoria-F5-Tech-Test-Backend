@@ -1,6 +1,7 @@
 package dev.mark.factoria_tech_test.images;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -37,7 +39,7 @@ public class ImageController {
     }
 
     @PostMapping(path = "/any/images/uploadImage")
-    ResponseEntity<Image> uploadImages(@RequestParam(name = "imageTitle", required = true) String imageTitle,
+    ResponseEntity<Image> uploadImage(@RequestParam(name = "imageTitle", required = true) String imageTitle,
             @RequestParam(name = "file", required = true) MultipartFile file) {
 
         String uniqueImageName = storageService.createUniqueName(file);
@@ -46,7 +48,16 @@ public class ImageController {
         Image savedImage = imageService.saveImage(file, imageTitle, uniqueImageName);
 
         return ResponseEntity.status(HttpStatus.OK).body(savedImage);
-        
+    }
+
+    @PutMapping(path = "/any/images/updateImage/{id}")
+    ResponseEntity<Image> updateImage(@PathVariable Long id, 
+        @RequestParam(name = "imageTitle", required = true) String imageTitle,
+            @RequestParam(name = "file", required = false) Optional<MultipartFile> file) {
+
+        Image updatedImage = imageService.updateImage(file, id, imageTitle);
+
+        return ResponseEntity.status(HttpStatus.OK).body(updatedImage);
     }
 
     @GetMapping("/any/images/getAsResource/{filename:.+}")

@@ -1,6 +1,8 @@
 package dev.mark.factoria_tech_test.images;
 
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -8,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import dev.mark.factoria_tech_test.users.UsersManager;
 import dev.mark.factoria_tech_test.users.profiles.Profile;
 import dev.mark.factoria_tech_test.users.profiles.ProfileRepository;
+import dev.mark.factoria_tech_test.utilities.FileOperations;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 
@@ -18,6 +21,7 @@ public class ImageService {
     private ImageRepository imageRepository;
     private ProfileRepository profileRepository;
     private UsersManager usersManager;
+    private FileOperations fileOperations;
 
     public List<Image> getCurrentUserImages() {
 
@@ -44,6 +48,27 @@ public class ImageService {
         return savedImage;
     }
 
+    public Image updateImage(Optional<MultipartFile> file, @NonNull Long imageId, @NonNull String imageTitle) {
+
+        Image updatingImage = imageRepository.findById(imageId).orElseThrow(() -> new StorageFileNotFoundException("Image not found"));
+
+        if (file.isPresent()) {
+            MultipartFile imageToSave = file.get();
+
+            String uniqueImageName = fileOperations.createUniqueName(imageToSave);
+
+            fileOperations.saveImage(imageToSave, uniqueImageName);
+
+            updatingImage.setImageName(uniqueImageName);
+        }
+
+        updatingImage.setImageTitle(imageTitle);
+        
+        Image updatedImage = imageRepository.save(updatingImage);
+
+        return updatedImage;
+    }
+
     public void delete(String filename) {
 
         Long principalId = usersManager.getCurrentUserId();
@@ -51,7 +76,7 @@ public class ImageService {
 
         Image image = imageRepository.findByImageName(filename)
         .orElseThrow(() -> new StorageFileNotFoundException("Image not found in the database"));
-        
+
         profile.getImages().remove(image);
         imageRepository.delete(image);
     }
