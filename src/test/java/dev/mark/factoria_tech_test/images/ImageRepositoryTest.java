@@ -1,13 +1,9 @@
 package dev.mark.factoria_tech_test.images;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
@@ -26,18 +22,8 @@ public class ImageRepositoryTest {
     ImageRepository repository;
 
     @Test
-    void testShouldGetAllImages() {
-
-        Image image = Image.builder().imageName("Test Image").imageTitle("Test Title").build();
-        Image otherImage = Image.builder().imageName("Other image").imageTitle("Other image title").build();
-        
-        entityManager.persist(image);
-        entityManager.persist(otherImage);
-
-        List<Image> images = repository.findAll();
-
-        assertThat(images, hasSize(greaterThan(1)));
-        assertThat(images.get(0).getImageName()).isEqualTo("Test Image");
+    void getAll_ShouldThrowException() {
+        assertThrows(UnsupportedOperationException.class, () -> repository.findAll());
     }
 
     @Test
