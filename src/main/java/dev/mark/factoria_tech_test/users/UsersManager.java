@@ -12,12 +12,9 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class UsersManager {
 
-    private SecurityContext contextHolder;
-    private Authentication auth;
-
     public Long getCurrentUserId() {
-        contextHolder = SecurityContextHolder.getContext();
-        auth = contextHolder.getAuthentication();
+        SecurityContext contextHolder = SecurityContextHolder.getContext();
+        Authentication auth = contextHolder.getAuthentication();
         Long principalId = 0L;
 
         if (auth.getPrincipal() instanceof SecurityUser securityUser) {
