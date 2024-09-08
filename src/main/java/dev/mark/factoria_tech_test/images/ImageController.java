@@ -33,7 +33,7 @@ public class ImageController {
     ImageService imageService;
 
     @GetMapping(path = "/any/images/getCurrentUserImages")
-    public ResponseEntity<List<Image>> getById() throws Exception{
+    public ResponseEntity<List<Image>> getImages() throws Exception{
         List<Image> images = imageService.getCurrentUserImages();
         return ResponseEntity.status(HttpStatusCode.valueOf(200)).body(images);
     }
