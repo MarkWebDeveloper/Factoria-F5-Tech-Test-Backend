@@ -22,12 +22,12 @@ public class ImageRepositoryTest {
     ImageRepository repository;
 
     @Test
-    void getAll_ShouldThrowException() {
+    void findAll_ShouldThrowException() {
         assertThrows(UnsupportedOperationException.class, () -> repository.findAll());
     }
 
     @Test
-    void testShouldGetOneImageById() {
+    void findById_ShouldGetOneById() {
 
         Image newImage = Image.builder().imageName("New Image").build();
         entityManager.persist(newImage);
@@ -37,7 +37,7 @@ public class ImageRepositoryTest {
     }
 
     @Test
-    void testShouldGetAnImageByName() {
+    void findByName_ShouldGetOneByName() {
 
         Image image = Image.builder().imageName("Test Image").imageTitle("Test Title").build();
 
@@ -48,7 +48,7 @@ public class ImageRepositoryTest {
     }
 
     @Test
-    void testDeleteImageById() {
+    void delete_ShouldDeleteOneById() {
 
         Image newImage = Image.builder().imageName("Image to delete").build();
         Image savedImage = repository.save(newImage);
@@ -59,7 +59,7 @@ public class ImageRepositoryTest {
     }
 
     @Test
-    void testShouldSaveAndReturnNewProduct() {
+    void save_ShouldSaveNewImage() {
 
         Image newImage = Image.builder().imageName("New Image").imageTitle("New Title").build();
         Image savedImage = repository.save(newImage);
@@ -71,7 +71,7 @@ public class ImageRepositoryTest {
     }
 
     @Test
-    void testShouldDeleteAnExistingImage() {
+    void delete_shouldDeleteSavedImage() {
 
         Image newImage = Image.builder().imageName("Image to delete").build();
         entityManager.persist(newImage);

@@ -6,12 +6,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import dev.mark.factoria_tech_test.users.security.SecurityUser;
+import lombok.AllArgsConstructor;
 
 @Component
+@AllArgsConstructor
 public class UsersManager {
+
+    private SecurityContext contextHolder;
+    private Authentication auth;
+
     public Long getCurrentUserId() {
-        SecurityContext contextHolder = SecurityContextHolder.getContext();
-        Authentication auth = contextHolder.getAuthentication();
+        contextHolder = SecurityContextHolder.getContext();
+        auth = contextHolder.getAuthentication();
         Long principalId = 0L;
 
         if (auth.getPrincipal() instanceof SecurityUser securityUser) {

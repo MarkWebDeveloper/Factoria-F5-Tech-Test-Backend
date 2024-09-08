@@ -1,47 +1,35 @@
 package dev.mark.factoria_tech_test.images;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import dev.mark.factoria_tech_test.config.StorageProperties;
+import dev.mark.factoria_tech_test.users.UsersManager;
 import dev.mark.factoria_tech_test.users.profiles.Profile;
 import dev.mark.factoria_tech_test.users.profiles.ProfileRepository;
-import dev.mark.factoria_tech_test.users.security.SecurityUser;
 import dev.mark.factoria_tech_test.utilities.FileOperations;
-import dev.mark.factoria_tech_test.utilities.Time;
+import java.util.List;
 
+@ExtendWith(MockitoExtension.class)
 class ImageServiceTest {
+
+    @InjectMocks
+    private ImageService imageService;
 
     @Mock
     private ImageRepository imageRepository;
@@ -49,161 +37,101 @@ class ImageServiceTest {
     @Mock
     private ProfileRepository profileRepository;
 
-    @Mock
-    private Time time;
+    @Mock FileOperations fileOperations;
 
     @Mock
-    private MultipartFile file;
+    Authentication authentication;
 
     @Mock
-    private Authentication auth;
+    SecurityContext securityContext;
 
     @Mock
-    private SecurityContext securityContext;
+    SecurityContextHolder securityContextHolder;
 
     @Mock
-    private StorageProperties storageProperties;
+    UsersManager usersManager;
 
     @Mock
-    private FileOperations fileOperations;
+    Profile profile;
 
-    private ImageService imageService;
+    @Mock 
+    MultipartFile file;
 
-    private final Path rootLocation = Paths.get("uploads");
+    @Test
+    public void test_getCurrentUserImages_ShouldReturnUserImages() {
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+        Long mockPrincipalId = 2L;
+        List<Image> mockImages = new ArrayList<>();
+        Optional<List<Image>> mockOptionalImages = Optional.of(mockImages);
 
-        when(storageProperties.getLocation()).thenReturn("uploads");
+        when(usersManager.getCurrentUserId()).thenReturn(mockPrincipalId);
+        when(imageRepository.findImagesByProfileId(mockPrincipalId)).thenReturn(mockOptionalImages);
+        
+        List<Image> images = imageService.getCurrentUserImages();
 
-        imageService = new ImageService(imageRepository, time, storageProperties, profileRepository, fileOperations);
-
-        when(securityContext.getAuthentication()).thenReturn(auth);
-        SecurityContextHolder.setContext(securityContext);
+        assertEquals(mockImages, images, "Returned images should match mocked data");
     }
 
     @Test
-    void init_ShouldCreateDirectories() throws IOException {
-        imageService.init();
-        assertTrue(Files.exists(rootLocation));
+    public void test_saveImage_shouldSaveImage() {
+
+        Long PrincipalId = 2L;
+        Optional<Profile> OptionalProfile = Optional.of(profile);
+        when(usersManager.getCurrentUserId()).thenReturn(PrincipalId);
+        when(profileRepository.findById(PrincipalId)).thenReturn(OptionalProfile);
+
+        String imageTitle = "Test title";
+        String imageName = "Test name";
+        Image imageToSave = Image.builder().imageName(imageName).imageTitle(imageTitle).build();
+        when(imageRepository.save(any(Image.class))).thenReturn(imageToSave);
+        
+        Image savedImage = imageService.saveImage(file, imageTitle, imageName);
+
+        assertNotNull(savedImage);
+        assertEquals(imageToSave, savedImage, "Returned images should match mocked data");
     }
 
     @Test
-    void resolvePath_ShouldReturnCorrectPath() {
-        String filename = "testImage.jpg";
-        Path resolvedPath = imageService.resolvePath(filename);
-        assertEquals(rootLocation.resolve(filename), resolvedPath);
+    public void test_updateImage_shouldUpdateImage() {
+
+        Long oldImageId = 1L;
+        String oldImageTitle = "Old Image Title";
+        String oldImageName = "Old Image Name";
+        String uniqueImageName = oldImageName + "-123456789.jpg";
+        String newImageTitle = "New Image Title";
+        Image imageToUpdate = Image.builder().id(1L).imageName(oldImageName).imageTitle(oldImageTitle).build();
+
+        when(imageRepository.findById(oldImageId)).thenReturn(Optional.of(imageToUpdate));
+        when(fileOperations.createUniqueName(any(MultipartFile.class))).thenReturn(uniqueImageName);
+        when(imageRepository.save(imageToUpdate)).thenReturn(imageToUpdate);
+
+        Image updatedImage = imageService.updateImage(Optional.of(file), oldImageId, newImageTitle);
+
+        assertNotNull(updatedImage);
+        assertEquals(updatedImage.getId(), oldImageId);
+        assertEquals(updatedImage.getImageTitle(), newImageTitle);
+        assertEquals(updatedImage.getImageName(), uniqueImageName);
     }
 
     @Test
-    void saveImage_ShouldThrowException_WhenFileIsEmpty() throws IOException {
-        when(file.isEmpty()).thenReturn(true);
+    public void test_deleteImage_shouldDeleteImage() {
 
-        StorageException thrown = assertThrows(StorageException.class, () -> {
-            imageService.saveImage(file, "Test Image");
-        });
-
-        assertEquals("Failed to store empty file.", thrown.getMessage());
-    }
-
-    @Test
-    void saveImage_ShouldSaveImage_WhenFileIsValid() throws IOException {
-        when(file.isEmpty()).thenReturn(false);
-        when(file.getOriginalFilename()).thenReturn("image.jpg");
-        when(file.getInputStream()).thenReturn(mock(InputStream.class));
-
-        when(time.checkCurrentTime()).thenReturn("20230905123000");
-
-        SecurityUser securityUser = mock(SecurityUser.class);
-        when(securityUser.getId()).thenReturn(1L);
-        when(auth.getPrincipal()).thenReturn(securityUser);
-
-        Profile profile = new Profile();
-        profile.setImages(new ArrayList<>());
-        when(profileRepository.findById(1L)).thenReturn(Optional.of(profile));
-
-        imageService.saveImage(file, "Test Image");
-
-        verify(imageRepository, times(1)).save(any(Image.class));
-        verify(profileRepository, times(1)).save(any(Profile.class));
-    }
-
-    @Test
-void loadAsResource_ShouldReturnResource_WhenFileExists() throws Exception {
-    String filename = "image.jpg";
-
-    ImageService spyImageService = spy(imageService);
-
-    Path mockPath = mock(Path.class);
-    when(spyImageService.resolvePath(filename)).thenReturn(mockPath);
-
-    URI mockUri = new URI("file:/path/to/image.jpg");
-    when(mockPath.toUri()).thenReturn(mockUri);
-
-    UrlResource mockResource = mock(UrlResource.class);
-    when(mockResource.exists()).thenReturn(true);
-    when(mockResource.isReadable()).thenReturn(true);
-    
-    doReturn(mockResource).when(spyImageService).createUrlResource(mockUri);
-
-    Resource returnedResource = spyImageService.loadAsResource(filename);
-
-    assertNotNull(returnedResource);
-    assertSame(mockResource, returnedResource);
-    verify(mockResource, times(1)).exists();
-}
-
-    @Test
-    void loadAsResource_ShouldThrowException_WhenFileDoesNotExist() {
-        String filename = "nonExistent.jpg";
-
-        StorageFileNotFoundException thrown = assertThrows(StorageFileNotFoundException.class, () -> {
-            imageService.loadAsResource(filename);
-        });
-
-        assertEquals("Could not read file: nonExistent.jpg", thrown.getMessage());
-    }
-
-    @Test
-    void delete_ShouldReturnTrue_WhenFileDeletedSuccessfully() throws IOException {
         String filename = "image.jpg";
+        Long principalId = 2L;
 
-        Image image = mock(Image.class);
-        when(imageRepository.findByImageName(filename)).thenReturn(Optional.of(image));
+        when(usersManager.getCurrentUserId()).thenReturn(principalId);
 
-        FileOperations fileOperations = mock(FileOperations.class);
-        when(fileOperations.deleteIfExists(rootLocation.resolve(filename))).thenReturn(true);
+        Image imageToDelete = Image.builder().id(1L).imageName(filename).build();
+        Profile newProfile = new Profile();
+        List<Image> imageList = new ArrayList<>();
+        imageList.add(imageToDelete);
+        newProfile.setImages(imageList);
 
-        ImageService imageServiceWithMock = new ImageService(imageRepository, time, storageProperties, profileRepository, fileOperations);
+        when(profileRepository.findById(principalId)).thenReturn(Optional.of(newProfile));
+        when(imageRepository.findByImageName(filename)).thenReturn(Optional.of(imageToDelete));
 
-        boolean result = imageServiceWithMock.delete(filename);
-        assertTrue(result);
+        imageService.delete(filename);
 
-        verify(imageRepository, times(1)).delete(image);
-    }
-
-    @Test
-    void delete_ShouldThrowException_WhenImageNotFound() {
-        String filename = "nonExistent.jpg";
-
-        when(imageRepository.findByImageName(filename)).thenReturn(Optional.empty());
-
-        StorageFileNotFoundException thrown = assertThrows(StorageFileNotFoundException.class, () -> {
-            imageService.delete(filename);
-        });
-
-        assertEquals("Image not found in the database", thrown.getMessage());
-    }
-
-    @Test
-    void createUniqueName_ShouldReturnUniqueName() {
-        when(file.getOriginalFilename()).thenReturn("example.jpg");
-
-        when(time.checkCurrentTime()).thenReturn("20230905123000");
-
-        String uniqueName = imageService.createUniqueName(file);
-
-        assertEquals("example-20230905123000.jpg", uniqueName);
+        assertFalse(newProfile.getImages().contains(imageToDelete));
     }
 }
