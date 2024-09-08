@@ -47,7 +47,7 @@ public class ImageController {
         storageService.saveImage(file, uniqueImageName);
         Image savedImage = imageService.saveImage(file, imageTitle, uniqueImageName);
 
-        return ResponseEntity.status(HttpStatus.OK).body(savedImage);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedImage);
     }
 
     @PutMapping(path = "/any/images/updateImage/{id}")
