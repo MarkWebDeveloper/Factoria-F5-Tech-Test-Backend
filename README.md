@@ -66,7 +66,8 @@ This will download all the required libraries for your project.
 
 5. **Configure the application (optional):**
 
-If you want to connect to a MySQL database instead of H2, update the application.properties file with your database connection details.
+If you want to connect to a MySQL database instead of H2, update the application.properties file with your database connection details. <br/>
+There is no need to set the environment variables, since the launch.json was uploaded to the repository. This is an intentional step to make the installation process easier. That should not be practiced in the production environment.
 
 6. **Run the application:**
 
