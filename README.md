@@ -71,6 +71,10 @@ There is no need to set the environment variables, since the launch.json was upl
 
 6. **Run the application:**
 
+Make sure to run the application with all of the environment variables, which you can find in .vscode -> launch.json file. You can do it by going to FactoriaTechTestApplication.java file and click on play button (in Visual Sturio Code only).
+
+If you are planning to run the program without environment variables, you can use the following command.
+
 ```bash
 mvn spring-boot:run
 ```
